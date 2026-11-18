@@ -985,6 +985,7 @@ bl.addTo(map);
 // ---- Propostes i correccions ----
 // Els missatges s'envien amb Web3Forms (https://web3forms.com): la clau d'accés
 // identifica la bústia de destinació sense que l'adreça de correu aparegui a la pàgina.
+const PARTICIPACIO_API_URL = ""; // URL del Worker un cop desplegat
 const WEB3FORMS_KEY = "78aed5b6-a14c-46ac-9c34-db1c4cc724cd";
 const panel = document.getElementById("panel"), form = document.getElementById("formProp"), estat = document.getElementById("estat");
 const sel = document.getElementById("selObra");
@@ -1017,9 +1018,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape") sobre.classList.re
 form.addEventListener("submit", async e=>{
   e.preventDefault();
   if(form.botcheck.checked) return;
-  if(WEB3FORMS_KEY.startsWith("POSA_AQUI")){
-    estat.className="err"; estat.textContent="El formulari encara no està activat (falta la clau d'enviament)."; return;
-  }
+
   const f = DATA.find(x=>x.id===sel.value);
   const obra = f ? `#${f.id} ${f.nom} (${f.mun})` : "—";
   const cos = {
@@ -1033,10 +1032,22 @@ form.addEventListener("submit", async e=>{
   if(form.correu.value) cos.replyto = form.correu.value;
   const btn=form.querySelector("button[type=submit]"); btn.disabled=true; estat.className=""; estat.textContent="Enviant…";
   try{
-    const r = await fetch("https://api.web3forms.com/submit",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(cos)});
-    const j = await r.json();
-    if(j.success){ estat.className="ok"; estat.textContent="Gràcies! La proposta s'ha enviat i la revisarem."; form.missatge.value=""; form.font.value=""; }
-    else throw new Error(j.message||"error");
+    if(PARTICIPACIO_API_URL){
+      const r=await fetch(PARTICIPACIO_API_URL+"/api/propostes",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({tipus:form.tipus.value,obra,missatge:form.missatge.value,font:form.font.value,nom:form.nom.value,correu:form.correu.value,botcheck:form.botcheck.checked})
+      });
+      const j=await r.json();
+      if(!r.ok||!j.stored)throw new Error(j.error||"error");
+      estat.className="ok";
+      estat.textContent=j.notified?"Gràcies! La proposta s'ha desat i enviat per correu.":"Gràcies! La proposta s'ha desat, però la notificació per correu està pendent.";
+      form.missatge.value="";form.font.value="";
+    }else{
+      const r=await fetch("https://api.web3forms.com/submit",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(cos)});
+      const j=await r.json();
+      if(!r.ok||!j.success)throw new Error(j.message||"error");
+      estat.className="ok";estat.textContent="Gràcies! La proposta s'ha enviat per correu.";form.missatge.value="";form.font.value="";
+    }
   }catch(err){ estat.className="err"; estat.textContent="No s'ha pogut enviar. Torna-ho a provar d'aquí a una estona."; }
   btn.disabled=false;
 });
@@ -1122,26 +1133,47 @@ form.addEventListener("submit", async e=>{
 </script>
 
 <script>
-(function(){
-  const base={simbols:0,mapa:0,fitxes:0,xarxa:0,ruta:0};
-  const key="puig-millores-vot-v2";
-  let selected=null;
-  try{const saved=localStorage.getItem(key);if(Object.prototype.hasOwnProperty.call(base,saved))selected=saved;}catch(e){}
-  const buttons=[...document.querySelectorAll("[data-vot-millora]")];
-  function draw(){
-    buttons.forEach(b=>{
-      const id=b.dataset.votMillora;
-      b.querySelector(".num-vots").textContent=base[id]+(selected===id?1:0);
-      b.setAttribute("aria-pressed",String(selected===id));
-    });
-
-  }
-  buttons.forEach(b=>b.addEventListener("click",()=>{
-    selected=b.dataset.votMillora;
-    try{localStorage.setItem(key,selected);}catch(e){}
-    draw();
-  }));
-  draw();
+// Recompte compartit: no mostra vots locals com si fossin globals.
+(async function(){
+ const buttons=[...document.querySelectorAll("[data-vot-millora]")];
+ const status=document.createElement("small");
+ status.className="proximament-nota";status.setAttribute("role","status");
+ document.querySelector(".proximament-vots").after(status);
+ const api=PARTICIPACIO_API_URL.replace(/\/$/,"");
+ const key="puig-votant-global-v1";
+ let voter,selected=null,busy=false;
+ try{
+  voter=localStorage.getItem(key);
+  if(!voter){voter=crypto.randomUUID();localStorage.setItem(key,voter);}
+  selected=localStorage.getItem(key+"-opcio");
+ }catch(e){voter=crypto.randomUUID();}
+ function paint(counts){
+  buttons.forEach(b=>{const id=b.dataset.votMillora;
+   b.querySelector(".num-vots").textContent=String(Number(counts[id]||0));
+   b.setAttribute("aria-pressed",String(id===selected));});
+ }
+ if(!api){
+  buttons.forEach(b=>b.disabled=true);
+  status.textContent="Votació compartida pendent d'activació.";
+  return;
+ }
+ async function refresh(){
+  const r=await fetch(api+"/api/vots",{cache:"no-store"});if(!r.ok)throw Error("API no disponible");
+  paint((await r.json()).counts);
+ }
+ try{await refresh();}catch(e){buttons.forEach(b=>b.disabled=true);status.textContent="La votació no està disponible ara mateix.";return;}
+ buttons.forEach(b=>b.addEventListener("click",async()=>{
+  if(busy)return;busy=true;buttons.forEach(x=>x.disabled=true);
+  status.textContent="Desant el vot…";
+  try{
+   const r=await fetch(api+"/api/vots",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({voter,opcio:b.dataset.votMillora})});
+   if(!r.ok)throw Error("Error desant vot");
+   const data=await r.json();selected=data.selected;
+   try{localStorage.setItem(key+"-opcio",selected);}catch(e){}
+   paint(data.counts);status.textContent="Vot desat. Pots canviar-lo.";
+  }catch(e){status.textContent="No s'ha pogut desar el vot. Torna-ho a provar.";}
+  finally{busy=false;buttons.forEach(x=>x.disabled=false);}
+ }));
 })();
 </script>
 </body>
