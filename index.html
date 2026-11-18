@@ -387,7 +387,7 @@
     <button type="button" data-vot-millora="simbols">Símbols ocults <span class="num-vots">0</span></button>
     <button type="button" data-vot-millora="mapa">Mapa històric <span class="num-vots">0</span></button>
     <button type="button" data-vot-millora="fitxes">Fitxes exportables <span class="num-vots">0</span></button>
-    <button type="button" data-vot-millora="xarxa">Xarxa de col·laboradors <span class="num-vots">0</span></button>
+    <button type="button" data-vot-millora="xarxa">Xarxa de col·laboració <span class="num-vots">0</span></button>
     <button type="button" data-vot-millora="ruta">Ruta secreta dels detalls <span class="num-vots">0</span></button>
   </div>
 </aside>
@@ -420,7 +420,7 @@
     <button type="button" data-tab="t-saber"><span class="ll">Per saber-ne més</span><span class="lc">Saber-ne més</span></button>
     <button type="button" data-tab="t-xifres">En xifres</button>
     <button type="button" data-tab="t-projecte">El projecte</button>
-    <button type="button" data-tab="t-estudi"><span class="ll">Per a estudiosos</span><span class="lc">Estudiosos</span></button>
+    <button type="button" data-tab="t-estudi"><span class="ll">Per a especialistes</span><span class="lc">Especialistes</span></button>
   </div>
   <div class="cos">
     <div class="tab on" id="t-artista"><h3>Josep Puig i Cadafalch</h3>
@@ -478,7 +478,7 @@
       <li><a href="https://www.enciclopedia.cat/EC-GEC-0053080" target="_blank" rel="noopener">Enciclopèdia Catalana</a><span>Biografia de referència.</span></li>
     </ul>
 
-    <h3>Estudiosos i obres de referència</h3>
+    <h3>Especialistes i obres de referència</h3>
     <ul class="enll">
       <li><a href="https://upcommons.upc.edu/handle/2117/109354" target="_blank" rel="noopener">Jordi Romeu · Tesi doctoral sobre Puig i Cadafalch (UPC, 1989)</a><span>Estudi exhaustiu de l'obra arquitectònica, amb una cronologia detallada. En accés obert.</span></li>
       <li><a href="https://drac.cultura.gencat.cat/bitstream/handle/20.500.12368/19564/Puig%20i%20Cadafalch%20(1).pdf" target="_blank" rel="noopener">Congrés «Puig i Cadafalch. Arquitecte de Catalunya» (2017)</a><span>Actes del congrés de l'Any Puig i Cadafalch, organitzat amb l'IEC i la Universitat de Barcelona.</span></li>
@@ -526,7 +526,7 @@
 
     </div>
     <div class="tab" id="t-estudi">
-      <h3>Dades per a estudiosos</h3>
+      <h3>Dades per a especialistes</h3>
       <p>Aquesta secció recull la informació de treball que no es mostra a la consulta general del mapa:</p>
       <ul>
         <li>el número de cada obra a l'inventari de partida, «Obra total de Puig» (PDF, maig 2020);</li>
@@ -787,7 +787,7 @@ document.addEventListener("click",e=>{
   rangComparar.value=50;actualitzaComparador();dialComparar.showModal();
 });
 
-// ---- Taula per a estudiosos ----
+// ---- Taula per a especialistes ----
 document.getElementById("chkPrec").addEventListener("change",e=>setColorMode(e.target.checked?"prec":"tipus"));
 const PRECL={"exacta":"exacta","adreça":"adreça","lloc":"lloc conegut","aproximada":"aproximada","municipi":"només municipi"};
 const ordId = id => id.startsWith("N") ? 1000+ +id.slice(1) : +id;
