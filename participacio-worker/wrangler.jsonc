@@ -1,13 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "puig-cadafalch-vots",
+  "name": "participacio-worker",
   "main": "src/index.js",
   "compatibility_date": "2026-11-18",
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "puig-cadafalch-participacio",
-      "database_id": "SUBSTITUEIX_PEL_DATABASE_ID",
+      "database_name": "puig-participacio",
+      "database_id": "a3b384fc-8aae-4fd3-a8af-ca7591d2685c",
       "migrations_dir": "migrations"
     }
   ]
